@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Bonds
+from .models import Bond, Quotation, MoneyValue
 
-admin.site.register(Bonds)
-
+admin.site.register(Bond)
+admin.site.register(Quotation)
+admin.site.register(MoneyValue)
 # Register your models here.

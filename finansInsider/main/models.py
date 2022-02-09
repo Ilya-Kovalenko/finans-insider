@@ -1,147 +1,145 @@
 from django.db import models
 
 
-class Quotation:  # work in progress
-    def __init__(self):
-        self.units = models.IntegerField()
-        self.nano = models.IntegerField()
+class Quotation(models.Model):
+    units = models.BigIntegerField()
+    nano = models.IntegerField()
 
 
-class MoneyValue:  # work in progress
-    def __init__(self):
-        self.currency = models.CharField(max_length=10)
-        self.units = models.IntegerField()
-        self.nano = models.IntegerField()
+class MoneyValue(models.Model):
+    currency = models.CharField(max_length=20)
+    units = models.BigIntegerField()
+    nano = models.IntegerField()
 
 
 class Bond(models.Model):
     figi = models.CharField(max_length=12)
     ticker = models.CharField(max_length=12)
-    class_code = models.CharField(max_length=12)
+    class_code = models.CharField(max_length=20)
     isin = models.CharField(max_length=12)
     lot = models.IntegerField()
-    currency = models.CharField(max_length=12)
-    klong = Quotation
-    kshort = Quotation
-    dlong = Quotation
-    dshort = Quotation
-    dlong_min = Quotation
-    dshort_min = Quotation
+    currency = models.CharField(max_length=20)
+    klong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_klong")
+    kshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_kshort")
+    dlong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_dlong")
+    dshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_dshort")
+    dlong_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_dlong_min")
+    dshort_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_dshort_min")
     short_enabled_flag = models.BooleanField()
     name = models.CharField(max_length=20)
-    exchange = models.CharField(max_length=20)
+    exchange = models.CharField(max_length=30)
     coupon_quantity_per_year = models.IntegerField()
-    maturity_date = models.DateTimeField()
-    nominal = MoneyValue
-    state_reg_date = models.DateTimeField()
-    placement_date = models.DateTimeField()
-    placement_price = MoneyValue
-    aci_value = MoneyValue
-    country_of_risk = models.CharField(max_length=30)
+    maturity_date = models.PositiveIntegerField()
+    nominal = models.ForeignKey(MoneyValue, on_delete=models.CASCADE, related_name="bond_nominal")
+    state_reg_date = models.PositiveIntegerField()
+    placement_date = models.PositiveIntegerField()
+    placement_price = models.ForeignKey(MoneyValue, on_delete=models.CASCADE, related_name="bond_placement_price")
+    aci_value = models.ForeignKey(MoneyValue, on_delete=models.CASCADE, related_name="bond_aci_value")
+    country_of_risk = models.CharField(max_length=10)
     country_of_risk_name = models.CharField(max_length=30)
     sector = models.CharField(max_length=30)
     issue_kind = models.CharField(max_length=15)
-    issue_size = models.BooleanField()
-    issue_size_plan = models.IntegerField()
-    trading_status = models.IntegerField()
+    issue_size = models.BigIntegerField()
+    issue_size_plan = models.BigIntegerField()
+    trading_status = models.PositiveSmallIntegerField()
     otc_flag = models.BooleanField()
     buy_available_flag = models.BooleanField()
     sell_available_flag = models.BooleanField()
     floating_coupon_flag = models.BooleanField()
     perpetual_flag = models.BooleanField()
     amortization_flag = models.BooleanField()
-    min_price_increment = Quotation()
+    min_price_increment = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="bond_min_price_increment")
     api_trade_available_flag = models.BooleanField()
 
 
 class Currency(models.Model):
     figi = models.CharField(max_length=12)
     ticker = models.CharField(max_length=12)
-    class_code = models.CharField(max_length=12)
+    class_code = models.CharField(max_length=20)
     isin = models.CharField(max_length=12)
     lot = models.IntegerField()
-    currency = models.CharField(max_length=12)
-    klong = Quotation
-    kshort = Quotation
-    dlong = Quotation
-    dshort = Quotation
-    dlong_min = Quotation
-    dshort_min = Quotation
+    currency = models.CharField(max_length=20)
+    klong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_klong")
+    kshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_kshort")
+    dlong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_dlong")
+    dshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_dshort")
+    dlong_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_dlong_min")
+    dshort_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_dshort_min")
     short_enabled_flag = models.BooleanField()
     name = models.CharField(max_length=20)
-    exchange = models.CharField(max_length=20)
-    nominal = MoneyValue
-    country_of_risk = models.CharField(max_length=30)
+    exchange = models.CharField(max_length=30)
+    nominal = models.ForeignKey(MoneyValue, on_delete=models.CASCADE, related_name="currency_nominal")
+    country_of_risk = models.CharField(max_length=10)
     country_of_risk_name = models.CharField(max_length=30)
-    trading_status = models.IntegerField()
+    trading_status = models.PositiveSmallIntegerField()
     otc_flag = models.BooleanField()
     buy_available_flag = models.BooleanField()
     sell_available_flag = models.BooleanField()
-    iso_currency_name = models.CharField(max_length=30)
-    min_price_increment = Quotation()
+    iso_currency_name = models.CharField(max_length=3)
+    min_price_increment = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="currency_min_price_increment")
     api_trade_available_flag = models.BooleanField()
 
 
 class Etf(models.Model):
     figi = models.CharField(max_length=12)
     ticker = models.CharField(max_length=12)
-    class_code = models.CharField(max_length=12)
+    class_code = models.CharField(max_length=20)
     isin = models.CharField(max_length=12)
     lot = models.IntegerField()
-    currency = models.CharField(max_length=12)
-    klong = Quotation
-    kshort = Quotation
-    dlong = Quotation
-    dshort = Quotation
-    dlong_min = Quotation
-    dshort_min = Quotation
+    currency = models.CharField(max_length=20)
+    klong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_klong")
+    kshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_kshort")
+    dlong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_dlong")
+    dshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_dshort")
+    dlong_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_dlong_min")
+    dshort_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_dshort_min")
     short_enabled_flag = models.BooleanField()
     name = models.CharField(max_length=20)
-    exchange = models.CharField(max_length=20)
-    fixed_commission = Quotation
-    focus_type = models.CharField(max_length=20)
-    released_date = models.DateTimeField()
-    num_shares = Quotation
-    country_of_risk = models.CharField(max_length=30)
+    exchange = models.CharField(max_length=30)
+    fixed_commission = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_fixed_commission")
+    focus_type = models.CharField(max_length=22)
+    released_date = models.PositiveIntegerField()
+    num_shares = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_num_shares")
+    country_of_risk = models.CharField(max_length=10)
     country_of_risk_name = models.CharField(max_length=30)
     sector = models.CharField(max_length=30)
-    rebalancing_freq = models.CharField(max_length=30)
-    trading_status = models.IntegerField()
+    rebalancing_freq = models.CharField(max_length=20)
+    trading_status = models.PositiveSmallIntegerField()
     otc_flag = models.BooleanField()
     buy_available_flag = models.BooleanField()
     sell_available_flag = models.BooleanField()
-    min_price_increment = Quotation()
+    min_price_increment = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="etf_min_price_increment")
     api_trade_available_flag = models.BooleanField()
 
 
 class Share(models.Model):
     figi = models.CharField(max_length=12)
     ticker = models.CharField(max_length=12)
-    class_code = models.CharField(max_length=12)
+    class_code = models.CharField(max_length=20)
     isin = models.CharField(max_length=12)
     lot = models.IntegerField()
-    currency = models.CharField(max_length=12)
-    klong = Quotation
-    kshort = Quotation
-    dlong = Quotation
-    dshort = Quotation
-    dlong_min = Quotation
-    dshort_min = Quotation
+    currency = models.CharField(max_length=20)
+    klong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_klong")
+    kshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_kshort")
+    dlong = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_dlong")
+    dshort = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_dshort")
+    dlong_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_dlong_min")
+    dshort_min = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_dshort_min")
     short_enabled_flag = models.BooleanField()
     name = models.CharField(max_length=20)
-    exchange = models.CharField(max_length=20)
-    ipo_date = models.DateTimeField()
-    issue_size = models.IntegerField()
-    country_of_risk = models.CharField(max_length=30)
+    exchange = models.CharField(max_length=30)
+    ipo_date = models.PositiveIntegerField()
+    issue_size = models.BigIntegerField()
+    country_of_risk = models.CharField(max_length=10)
     country_of_risk_name = models.CharField(max_length=30)
     sector = models.CharField(max_length=30)
-    issue_size_plan = models.IntegerField()
-    nominal = MoneyValue
-    trading_status = models.IntegerField()
+    issue_size_plan = models.BigIntegerField()
+    nominal = models.ForeignKey(MoneyValue, on_delete=models.CASCADE, related_name="share_nominal")
+    trading_status = models.PositiveSmallIntegerField()
     otc_flag = models.BooleanField()
     buy_available_flag = models.BooleanField()
     sell_available_flag = models.BooleanField()
     div_yield_flag = models.BooleanField()
-    share_type = models.IntegerField()
-    min_price_increment = Quotation()
+    share_type = models.PositiveSmallIntegerField()
+    min_price_increment = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name="share_min_price_increment")
     api_trade_available_flag = models.BooleanField()
