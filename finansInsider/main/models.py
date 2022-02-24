@@ -16,49 +16,52 @@ class MoneyValue(models.Model):
     nano = models.IntegerField(null=True, blank=True, verbose_name="Дробная часть суммы, может быть отрицательным "
                                                                    "числом")
 
+#  Enum типов акций
+SHARE_TYPE = (
+    ('SHARE_TYPE_UNSPECIFIED', 'Значение не определено'),
+    ('SHARE_TYPE_COMMON', 'Обыкновенная'),
+    ('SHARE_TYPE_PREFERRED', 'Привилегированная'),
+    ('SHARE_TYPE_ADR', 'Американские депозитарные расписки',),
+    ('SHARE_TYPE_GDR', 'Глобальные депозитарные расписки'),
+    ('SHARE_TYPE_MLP', 'Товарищество с ограниченной ответственностью'),
+    ('SHARE_TYPE_NY_REG_SHRS', 'Акции из реестра Нью-Йорка'),
+    ('SHARE_TYPE_CLOSED_END_FUND', 'Закрытый инвестиционный фонд'),
+    ('SHARE_TYPE_REIT', 'Траст недвижимости'),
+)
 
-class ShareType(enum.Enum):
+#  Enum
+SECURITY_TRADING_STATUS = (
+    ('SECURITY_TRADING_STATUS_UNSPECIFIED', 'Торговый статус не определён'),
+    ('SECURITY_TRADING_STATUS_NOT_AVAILABLE_FOR_TRADING', 'Недоступен для торгов'),
+    ('SECURITY_TRADING_STATUS_OPENING_PERIOD', 'Период открытия торгов'),
+    ('SECURITY_TRADING_STATUS_CLOSING_PERIOD', 'Период закрытия торгов'),
+    ('SECURITY_TRADING_STATUS_BREAK_IN_TRADING', 'Перерыв в торговле'),
+    ('SECURITY_TRADING_STATUS_NORMAL_TRADING', 'Нормальная торговля'),
+    ('SECURITY_TRADING_STATUS_CLOSING_AUCTION', 'Аукцион закрытия'),
+    ('SECURITY_TRADING_STATUS_DARK_POOL_AUCTION', 'Аукцион крупных пакетов'),
+    ('SECURITY_TRADING_STATUS_DISCRETE_AUCTION', 'Дискретный аукцион'),
+    ('SECURITY_TRADING_STATUS_OPENING_AUCTION_PERIOD', 'Аукцион открытия'),
+    ('SECURITY_TRADING_STATUS_TRADING_AT_CLOSING_AUCTION_PRICE', 'Период торгов по цене аукциона закрытия'),
+    ('SECURITY_TRADING_STATUS_SESSION_ASSIGNED', 'Сессия назначена'),
+    ('SECURITY_TRADING_STATUS_SESSION_CLOSE', 'Сессия закрыта'),
+    ('SECURITY_TRADING_STATUS_SESSION_OPEN', 'Сессия открыта'),
+    ('SECURITY_TRADING_STATUS_DEALER_NORMAL_TRADING', 'Доступна торговля в режиме внутренней ликвидности брокера'),
+    ('SECURITY_TRADING_STATUS_DEALER_BREAK_IN_TRADING', 'Перерыв торговли в режиме внутренней ликвидности брокера'),
+    ('SECURITY_TRADING_STATUS_DEALER_NOT_AVAILABLE_FOR_TRADING', 'Недоступна торговля в режиме внутренней ликвидности брокера'),
+)
 
-    SHARE_TYPE_UNSPECIFIED = {
-        'number': 0,
-        'description': 'Значение не определено.'
-        }
-    SHARE_TYPE_COMMON = {
-        'number': 1,
-        'description': 'Обыкновенная'
-        }
-    SHARE_TYPE_PREFERRED = {
-        'number': 2,
-        'description': 'Привилегированная'
-        }
-    SHARE_TYPE_ADR = {
-        'number': 3,
-        'description': 'Американские депозитарные расписки'
-        }
-    SHARE_TYPE_GDR = {
-        'number': 4,
-        'description': 'Глобальные депозитарные расписки'
-        }
-    SHARE_TYPE_MLP = {
-        'number': 5,
-        'description': 'Товарищество с ограниченной ответственностью'
-        }
-    SHARE_TYPE_NY_REG_SHRS = {
-        'number': 6,
-        'description': 'Акции из реестра Нью-Йорка'
-        }
-    SHARE_TYPE_CLOSED_END_FUND = {
-        'number': 7,
-        'description': 'Закрытый инвестиционный фонд'
-        }
-    SHARE_TYPE_REIT = {
-        'number': 8,
-        'description': 'Траст недвижимости'
-        }
 
-    def __init__(self, vals):
-        self.number = vals['number']
-        self.description = vals['description']
+FOCUS_TYPE = (
+    ('equity', 'Акции'),
+    ('fixed_income', 'Облигации'),
+    ('mixed_allocation', 'Смешанный'),
+    ('money_market', 'Денежный рынок'),
+    ('real_estate', 'Недвижимость'),
+    ('commodity', 'Товары'),
+    ('specialty', 'Специальный'),
+    ('private_equity', 'Частный акционерный капитал'),
+    ('alternative_investment', 'Альтернативные инвестиции'),
+)
 
 
 class CommonInfo(models.Model):
@@ -100,8 +103,9 @@ class CommonInfo(models.Model):
     country_of_risk_name = models.CharField(max_length=30, null=True, blank=True,
                                             verbose_name="Наименование страны риска, т.е. страны, в которой компания "
                                                          "ведёт основной бизнес.")
-    trading_status = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Текущий режим торгов "
-                                                                                          "инструмента.")
+    trading_status = models.CharField(max_length=60, choices=SECURITY_TRADING_STATUS,
+                                      default=SECURITY_TRADING_STATUS[0][0], null=True, blank=True,
+                                      verbose_name="Текущий режим торгов инструмента.")
     otc_flag = models.BooleanField(null=True, blank=True, verbose_name="Признак внебиржевой ценной бумаги.")
     buy_available_flag = models.BooleanField(null=True, blank=True, verbose_name="Признак доступности для покупки.")
     sell_available_flag = models.BooleanField(null=True, blank=True, verbose_name="Признак доступности для продажи.")
@@ -159,18 +163,8 @@ class Etf(CommonInfo):
     fixed_commission = models.ForeignKey(Quotation, on_delete=models.CASCADE,
                                          related_name="%(app_label)s_%(class)s_related_fixed_commission",
                                          null=True, blank=True, verbose_name="Размер фиксированной комиссии фонда.")
-    focus_type = models.CharField(max_length=22, null=True, blank=True, verbose_name="""
-focus_type\n
-Возможные значения:\n
-equity - акции;\n
-fixed_income - облигации;\n
-mixed_allocation - смешанный;\n
-money_market - денежный рынок;\n
-real_estate - недвижимость;\n
-commodity - товары;\n
-specialty - специальный;\n
-private_equity - private equity;\n
-alternative_investment - альтернативные инвестиции.""")
+    focus_type = models.CharField(max_length=22, null=True, blank=True, choices=FOCUS_TYPE,
+                                  verbose_name="Тип фокуса (focus_type)")
     released_date = models.PositiveIntegerField(null=True, blank=True, verbose_name="Дата выпуска в часовом поясе UTC.")
     num_shares = models.ForeignKey(Quotation, on_delete=models.CASCADE,
                                    related_name="%(app_label)s_%(class)s_related_num_shares", null=True,
@@ -189,8 +183,9 @@ class Share(CommonInfo):
     sector = models.CharField(max_length=30, null=True, blank=True, verbose_name="Сектор экономики.")
     issue_size_plan = models.BigIntegerField(null=True, blank=True, verbose_name="Плановый размер выпуска.")
     div_yield_flag = models.BooleanField(null=True, blank=True, verbose_name="Признак наличия дивидендной доходности.")
-    share_type = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Тип акции. Возможные "
-                                                                                      "значения: ShareType")
+    share_type = models.CharField(max_length=60, choices=SHARE_TYPE,
+                     default=SHARE_TYPE[0][0], null=True, blank=True,
+                     verbose_name="Тип акции. Возможные значения: ShareType")
 
     class Meta:
         verbose_name = "Акция"
